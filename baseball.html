@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>簡単野球ゲーム</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #1a5f2a 0%, #2d8f4e 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .game-container {
+            background: #fff;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .scoreboard {
+            display: flex;
+            justify-content: space-around;
+            background: #222;
+            color: #ffcc00;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-family: 'Courier New', monospace;
+        }
+        .score-item {
+            text-align: center;
+        }
+        .score-item span {
+            display: block;
+            font-size: 12px;
+            color: #aaa;
+        }
+        .score-item strong {
+            font-size: 24px;
+        }
+        .field {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            margin: 20px auto;
+            background: #4a9f5a;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .diamond {
+            position: absolute;
+            width: 150px;
+            height: 150px;
+            background: #c4a35a;
+            transform: rotate(45deg);
+            bottom: 30px;
+            left: 75px;
+        }
+        .base {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: #fff;
+            transform: rotate(45deg);
+        }
+        .home { bottom: 50px; left: 140px; }
+        .first { bottom: 120px; right: 70px; }
+        .second { bottom: 180px; left: 140px; }
+        .third { bottom: 120px; left: 70px; }
+        .runner {
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: #ff4444;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            display: none;
+            border: 2px solid #fff;
+        }
+        .runner.on-first { bottom: 125px; right: 65px; display: block; }
+        .runner.on-second { bottom: 185px; left: 148px; display: block; }
+        .runner.on-third { bottom: 125px; left: 78px; display: block; }
+        .ball {
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            background: #fff;
+            border-radius: 50%;
+            bottom: 70px;
+            left: 142px;
+            transition: all 0.3s;
+        }
+        .ball.pitched {
+            bottom: 200px;
+            animation: pitch 0.5s ease-out;
+        }
+        @keyframes pitch {
+            0% { bottom: 200px; transform: scale(0.5); }
+            100% { bottom: 70px; transform: scale(1); }
+        }
+        .bat {
+            position: absolute;
+            width: 8px;
+            height: 60px;
+            background: linear-gradient(to bottom, #8B4513, #D2691E);
+            bottom: 40px;
+            left: 160px;
+            transform-origin: bottom center;
+            border-radius: 4px;
+        }
+        .bat.swing {
+            animation: swing 0.3s ease-out;
+        }
+        @keyframes swing {
+            0% { transform: rotate(0deg); }
+            50% { transform: rotate(-90deg); }
+            100% { transform: rotate(0deg); }
+        }
+        .message {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            min-height: 40px;
+            margin: 15px 0;
+        }
+        .message.hit { color: #2ecc71; }
+        .message.out { color: #e74c3c; }
+        .message.homerun { color: #f39c12; }
+        .controls {
+            margin-top: 20px;
+        }
+        button {
+            padding: 15px 40px;
+            font-size: 18px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin: 5px;
+        }
+        .swing-btn {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+        }
+        .swing-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(231, 76, 60, 0.4);
+        }
+        .swing-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .reset-btn {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+        }
+        .reset-btn:hover {
+            transform: scale(1.05);
+        }
+        .count {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin: 15px 0;
+        }
+        .count-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .count-dots {
+            display: flex;
+            gap: 4px;
+        }
+        .dot {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: #ddd;
+        }
+        .dot.active.ball { background: #27ae60; }
+        .dot.active.strike { background: #e74c3c; }
+        .instructions {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            font-size: 14px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>簡単野球ゲーム</h1>
+
+        <div class="scoreboard">
+            <div class="score-item">
+                <span>スコア</span>
+                <strong id="score">0</strong>
+            </div>
+            <div class="score-item">
+                <span>イニング</span>
+                <strong id="inning">1</strong>
+            </div>
+            <div class="score-item">
+                <span>アウト</span>
+                <strong id="outs">0</strong>
+            </div>
+        </div>
+
+        <div class="count">
+            <div class="count-item">
+                <span>B</span>
+                <div class="count-dots" id="balls">
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                </div>
+            </div>
+            <div class="count-item">
+                <span>S</span>
+                <div class="count-dots" id="strikes">
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="field">
+            <div class="diamond"></div>
+            <div class="base home"></div>
+            <div class="base first"></div>
+            <div class="base second"></div>
+            <div class="base third"></div>
+            <div class="runner" id="runner1"></div>
+            <div class="runner" id="runner2"></div>
+            <div class="runner" id="runner3"></div>
+            <div class="ball" id="ball"></div>
+            <div class="bat" id="bat"></div>
+        </div>
+
+        <div class="message" id="message">スイングボタンを押せ!</div>
+
+        <div class="controls">
+            <button class="swing-btn" id="swingBtn" onclick="swing()">スイング!</button>
+            <button class="reset-btn" onclick="resetGame()">リセット</button>
+        </div>
+
+        <div class="instructions">
+            タイミングよくスイングしてヒットを打とう!<br>
+            3アウトでイニング交代、9イニングで終了
+        </div>
+    </div>
+
+    <script>
+        let score = 0;
+        let outs = 0;
+        let inning = 1;
+        let balls = 0;
+        let strikes = 0;
+        let bases = [false, false, false]; // 1塁, 2塁, 3塁
+        let isSwinging = false;
+        let gameOver = false;
+
+        function updateDisplay() {
+            document.getElementById('score').textContent = score;
+            document.getElementById('outs').textContent = outs;
+            document.getElementById('inning').textContent = inning;
+
+            // ボールカウント表示
+            const ballDots = document.getElementById('balls').children;
+            const strikeDots = document.getElementById('strikes').children;
+
+            for (let i = 0; i < 3; i++) {
+                ballDots[i].className = i < balls ? 'dot active ball' : 'dot';
+            }
+            for (let i = 0; i < 2; i++) {
+                strikeDots[i].className = i < strikes ? 'dot active strike' : 'dot';
+            }
+
+            // ランナー表示
+            document.getElementById('runner1').className = bases[0] ? 'runner on-first' : 'runner';
+            document.getElementById('runner2').className = bases[1] ? 'runner on-second' : 'runner';
+            document.getElementById('runner3').className = bases[2] ? 'runner on-third' : 'runner';
+        }
+
+        function showMessage(text, type = '') {
+            const msg = document.getElementById('message');
+            msg.textContent = text;
+            msg.className = 'message ' + type;
+        }
+
+        function advanceRunners(basesToAdvance) {
+            let runsScored = 0;
+
+            for (let i = 0; i < basesToAdvance; i++) {
+                if (bases[2]) { // 3塁ランナーがホームイン
+                    runsScored++;
+                    bases[2] = false;
+                }
+                if (bases[1]) { // 2塁→3塁
+                    bases[2] = true;
+                    bases[1] = false;
+                }
+                if (bases[0]) { // 1塁→2塁
+                    bases[1] = true;
+                    bases[0] = false;
+                }
+            }
+
+            return runsScored;
+        }
+
+        function swing() {
+            if (isSwinging || gameOver) return;
+            isSwinging = true;
+
+            const btn = document.getElementById('swingBtn');
+            btn.disabled = true;
+
+            // バットを振るアニメーション
+            const bat = document.getElementById('bat');
+            bat.classList.add('swing');
+
+            // ランダムな結果を決定
+            const result = Math.random();
+
+            setTimeout(() => {
+                bat.classList.remove('swing');
+
+                if (result < 0.15) {
+                    // ホームラン (15%)
+                    const runs = advanceRunners(4) + 1;
+                    score += runs;
+                    showMessage('ホームラン! +' + runs + '点!', 'homerun');
+                    resetCount();
+                } else if (result < 0.35) {
+                    // ヒット (20%)
+                    const runs = advanceRunners(1);
+                    bases[0] = true;
+                    score += runs;
+                    if (runs > 0) {
+                        showMessage('ヒット! +' + runs + '点!', 'hit');
+                    } else {
+                        showMessage('ヒット!', 'hit');
+                    }
+                    resetCount();
+                } else if (result < 0.50) {
+                    // 2塁打 (15%)
+                    const runs = advanceRunners(2);
+                    bases[1] = true;
+                    score += runs;
+                    if (runs > 0) {
+                        showMessage('2塁打! +' + runs + '点!', 'hit');
+                    } else {
+                        showMessage('2塁打!', 'hit');
+                    }
+                    resetCount();
+                } else if (result < 0.60) {
+                    // 四球 (10%)
+                    balls++;
+                    if (balls >= 4) {
+                        const runs = advanceRunnersForWalk();
+                        score += runs;
+                        if (runs > 0) {
+                            showMessage('四球! +' + runs + '点!', 'hit');
+                        } else {
+                            showMessage('四球!', 'hit');
+                        }
+                        resetCount();
+                    } else {
+                        showMessage('ボール! B' + balls, '');
+                    }
+                } else if (result < 0.80) {
+                    // ストライク (20%)
+                    strikes++;
+                    if (strikes >= 3) {
+                        showMessage('三振! アウト!', 'out');
+                        recordOut();
+                    } else {
+                        showMessage('ストライク! S' + strikes, '');
+                    }
+                } else {
+                    // アウト (20%)
+                    showMessage('アウト!', 'out');
+                    recordOut();
+                }
+
+                updateDisplay();
+
+                setTimeout(() => {
+                    isSwinging = false;
+                    btn.disabled = gameOver;
+                    if (!gameOver) {
+                        showMessage('スイングボタンを押せ!', '');
+                    }
+                }, 1000);
+            }, 300);
+        }
+
+        function advanceRunnersForWalk() {
+            let runs = 0;
+            if (bases[0] && bases[1] && bases[2]) {
+                runs = 1;
+                // 満塁で押し出し
+            } else if (bases[0] && bases[1]) {
+                bases[2] = true;
+            } else if (bases[0]) {
+                bases[1] = true;
+            }
+            bases[0] = true;
+            return runs;
+        }
+
+        function resetCount() {
+            balls = 0;
+            strikes = 0;
+        }
+
+        function recordOut() {
+            outs++;
+            resetCount();
+
+            if (outs >= 3) {
+                outs = 0;
+                bases = [false, false, false];
+                inning++;
+
+                if (inning > 9) {
+                    gameOver = true;
+                    showMessage('ゲーム終了! 最終スコア: ' + score + '点', '');
+                    document.getElementById('swingBtn').disabled = true;
+                } else {
+                    showMessage(inning + '回の攻撃!', '');
+                }
+            }
+        }
+
+        function resetGame() {
+            score = 0;
+            outs = 0;
+            inning = 1;
+            balls = 0;
+            strikes = 0;
+            bases = [false, false, false];
+            isSwinging = false;
+            gameOver = false;
+
+            document.getElementById('swingBtn').disabled = false;
+            showMessage('スイングボタンを押せ!', '');
+            updateDisplay();
+        }
+
+        // 初期表示
+        updateDisplay();
+    </script>
+</body>
+</html>
