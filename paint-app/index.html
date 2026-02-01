@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ペイントアプリ</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- ヘッダー -->
+        <header class="header">
+            <h1 class="header-title">ペイントアプリ</h1>
+            <div class="header-actions">
+                <button id="btn-new" class="btn">新規</button>
+                <button id="btn-save" class="btn">保存</button>
+                <button id="btn-load" class="btn">読み込み</button>
+                <button id="btn-export" class="btn btn-primary">エクスポート</button>
+                <input type="file" id="file-input" accept=".paint" style="display: none;">
+                <div class="header-divider"></div>
+                <button id="btn-undo" class="btn" title="元に戻す (Ctrl+Z)">↩ 戻す</button>
+                <button id="btn-redo" class="btn" title="やり直し (Ctrl+Y)">↪ やり直し</button>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <!-- サイドバー -->
+            <aside class="sidebar">
+                <!-- ツール選択 -->
+                <section class="sidebar-section">
+                    <h3 class="section-title">ツール</h3>
+                    <div class="tool-grid">
+                        <button class="tool-btn active" data-tool="pen" title="ペン">
+                            <span class="tool-icon">✏️</span>
+                            <span class="tool-label">ペン</span>
+                        </button>
+                        <button class="tool-btn" data-tool="eraser" title="消しゴム">
+                            <span class="tool-icon">🧹</span>
+                            <span class="tool-label">消しゴム</span>
+                        </button>
+                        <button class="tool-btn" data-tool="fill" title="塗りつぶし">
+                            <span class="tool-icon">🪣</span>
+                            <span class="tool-label">塗りつぶし</span>
+                        </button>
+                        <button class="tool-btn" data-tool="line" title="線">
+                            <span class="tool-icon">📏</span>
+                            <span class="tool-label">線</span>
+                        </button>
+                        <button class="tool-btn" data-tool="rect" title="四角形">
+                            <span class="tool-icon">⬜</span>
+                            <span class="tool-label">四角</span>
+                        </button>
+                        <button class="tool-btn" data-tool="circle" title="円">
+                            <span class="tool-icon">⭕</span>
+                            <span class="tool-label">円</span>
+                        </button>
+                    </div>
+                </section>
+
+                <!-- ブラシ設定 -->
+                <section class="sidebar-section">
+                    <h3 class="section-title">ブラシ設定</h3>
+                    <div class="brush-settings">
+                        <label class="setting-label">
+                            サイズ: <span id="brush-size-value">5</span>px
+                        </label>
+                        <input type="range" id="brush-size" min="1" max="50" value="5" class="slider">
+
+                        <label class="setting-label">形状</label>
+                        <div class="shape-buttons">
+                            <button class="shape-btn active" data-shape="round" title="丸">●</button>
+                            <button class="shape-btn" data-shape="square" title="四角">■</button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- カラーパレット -->
+                <section class="sidebar-section">
+                    <h3 class="section-title">カラー</h3>
+                    <div class="current-color-display">
+                        <span>選択中:</span>
+                        <div id="current-color" class="color-preview"></div>
+                    </div>
+                    <div class="color-palette" id="color-palette">
+                        <!-- カラーパレットはJSで生成 -->
+                    </div>
+                </section>
+            </aside>
+
+            <!-- キャンバスエリア -->
+            <main class="canvas-area">
+                <canvas id="canvas"></canvas>
+            </main>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
